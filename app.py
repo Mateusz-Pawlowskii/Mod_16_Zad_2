@@ -33,6 +33,19 @@ class db:
         df = df.join(self.customers.join(self.cc,on='country_code')
         .set_index('customer_Id'),on='cust_id')
 
+        def interval_helper(DOB):
+            DOB = dt.datetime.strptime(DOB, '%d-%m-%Y')
+            d1 = dt.datetime(1980, 1, 1)
+            d2 = dt.datetime(1990, 1, 1)
+            if DOB < d1:
+                return "1970-1980"
+            elif DOB > d1 and DOB < d2:
+                return "1980-1990"
+            elif DOB > d2:
+                return "1990-2000"
+
+        df["interval"] = df["DOB"].apply(interval_helper)
+
         self.merged = df
 
     @staticmethod
@@ -136,18 +149,25 @@ def tab3_scatter_plot(placeholder):
     fig = go.Figure(data=data, layout=go.Layout(title='Przychody'))
     return fig
 
-@app.callback(Output('male-store-type','figure'),
-            [Input('placeholder','value')])
-def tab3_male_pie(placeholder):
-    grouped = df.merged[df.merged['Gender']=="M"].groupby('Store_type')['total_amt'].sum()
-    fig = go.Figure(data=[go.Pie(labels=grouped.index,values=grouped.values)],layout=go.Layout(title='Udział kanałów wśród mężczyzn'))
+@app.callback(Output('gender-store-type','figure'),
+            [Input('gender-store-drop','value')])
+def tab3_gender_pie(cat):
+    grouped = df.merged[df.merged['Gender']==cat].groupby('Store_type')['total_amt'].sum()
+    fig = go.Figure(data=[go.Pie(labels=grouped.index,values=grouped.values)],layout=go.Layout(title='Udział kanałów wedłóg płci'))
     return fig
 
-@app.callback(Output('female-store-type','figure'),
-            [Input('placeholder','value')])
-def tab3_female_pie(placeholder):
-    grouped = df.merged[df.merged['Gender']=="F"].groupby('Store_type')['total_amt'].sum()
-    fig = go.Figure(data=[go.Pie(labels=grouped.index,values=grouped.values)],layout=go.Layout(title='Udział kanałów wśród kobiet'))
+@app.callback(Output('birth-store-type','figure'),
+            [Input('birth-store-drop','value')])
+def tab3_birth_pie(cat):
+    grouped = df.merged[df.merged['interval']==cat].groupby('Store_type')['total_amt'].sum()
+    fig = go.Figure(data=[go.Pie(labels=grouped.index,values=grouped.values)],layout=go.Layout(title='Udział kanałów wedłóg dat'))
+    return fig
+
+@app.callback(Output('country-store-type','figure'),
+            [Input('country-store-drop','value')])
+def tab3_country_pie(cat):
+    grouped = df.merged[df.merged['country']==cat].groupby('Store_type')['total_amt'].sum()
+    fig = go.Figure(data=[go.Pie(labels=grouped.index,values=grouped.values)],layout=go.Layout(title='Udział kanałów wedłóg państw'))
     return fig
 
 if __name__ == '__main__':
